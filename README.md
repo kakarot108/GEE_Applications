@@ -7,7 +7,7 @@ https://trinath27071988.users.earthengine.app/view/air-quality-monitoring-of-ind
 
 ![image](https://github.com/kakarot108/GEE_Applications/assets/94223948/d41079ef-06c8-4781-a4fc-63791c96b201)
 
-India Environmental Dashboard
+India Environmental Dashboard GEE APP
 
 Link --
 https://trinath27071988.users.earthengine.app/view/india-environmental-dashboard
