@@ -1,0 +1,167 @@
+// Sentinel 2a cloud masking ---------------------------------------------------------- 
+function maskCloudAndShadowsSR(image) {
+  var cloudProb = image.select('MSK_CLDPRB');
+  var snowProb = image.select('MSK_SNWPRB');
+  var cloud = cloudProb.lt(10);
+  var scl = image.select('SCL'); 
+  var shadow = scl.eq(3); // 3 = cloud shadow
+  var cirrus = scl.eq(10); // 10 = cirrus
+  // Cloud probability less than 10% or cloud shadow classification
+  var mask = cloud.and(cirrus.neq(1)).and(shadow.neq(1));
+  return image.updateMask(mask);
+}
+
+//core use for data call ---------------------------------------------------------------
+var image = ee.ImageCollection("COPERNICUS/S2_SR")
+  .filterBounds(table)
+  .filterDate('2023-01-01', '2023-12-31') // change date range here
+  .map(maskCloudAndShadowsSR)
+  .median()
+  .clip(table)
+  .multiply(0.0001);
+
+print(image, 'IMAGE 1');
+
+var visParamsTrue = {bands: ['B8', 'B4', 'B3'], min: 0, max: 0.8, gamma: 1.1};
+Map.centerObject(table, 10);
+Map.addLayer(image, visParamsTrue, 'S2 SR FCC');
+
+var addKNDVI_tanh = function(image) {
+  var D2 = image.select('B8').subtract(image.select('B4')).pow(2);
+  var sigma = ee.Number(0.15);
+  var kndvi = D2.divide(sigma.multiply(2.0).pow(2)).tanh();
+  return image.addBands(kndvi.select([0], ['kndvi']));
+};
+
+// Apply the KNDVI function to the image
+var kndviImage = addKNDVI_tanh(image).addBands(srtm);
+
+// Print the result to check
+print(kndviImage, 'IMAGE 2');
+
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// ---------------------------------------------------------------------
+//Add indicies for Better Accuracy
+var addIndices = function(image) {
+  var ndvi = image.normalizedDifference(['B8', 'B4']).rename(['ndvi']);
+  var ndbi = image.normalizedDifference(['B11', 'B8']).rename(['ndbi']);
+  var mndwi = image.normalizedDifference(['B4', 'B11']).rename(['mndwi']); 
+  var bsi = image.expression(
+      '(( X + Y ) - (A + B)) /(( X + Y ) + (A + B)) ', {
+        'X': image.select('B11'), //swir1
+        'Y': image.select('B8'),  //red
+        'A': image.select('B4'), // nir
+        'B': image.select('B2'), // blue
+  }).rename('bsi');
+    var EVI = image.expression(
+    '(2.5 * (NIR - RED)) / (NIR + 6 * RED - 7.5 * BLUE + 1)',{
+      'NIR': image.select('B8'),    
+      'RED': image.select('B4'),
+      'BLUE': image.select('B2'),
+    }).rename('EVI');
+      var evi2 = image.expression(
+    '2.4 * ((NIR - RED) / (NIR + RED + 1))', {
+      'NIR': image.select('B8'),    
+      'RED': image.select('B4'),
+      'BLUE': image.select('B2'),
+    }).rename('EVI2');
+      var evi2_2 = image.expression(
+    '2.5 * ((NIR - RED) / (NIR + 2.4 * RED + 1))', {
+      'NIR': image.select('B8'),    
+      'RED': image.select('B4'),
+      'BLUE': image.select('B2'),
+    }).rename('EVI2_2');
+
+  return image.addBands(ndvi).addBands(ndbi).addBands(mndwi)
+  .addBands(bsi).addBands(EVI).addBands(evi2).addBands(evi2_2)
+}
+
+var Image1 = addIndices(kndviImage)
+
+print(Image1, 'IMAGE 3');
+
+var bands = ['B2', 'B3', 'B4','B5','B6','B7','B8','B8A','B9','B11','B12','ndvi', 'ndbi', 'mndwi', 'bsi', 'EVI', 'kndvi', 'EVI2', 'EVI2_2', 'elevation']; // These are bands with 10 meter spatial resolution. 
+
+// selects the bands 
+var Image1 = Image1.select(bands)
+print(Image1,'IMAGE 4');
+
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+// ------------------------- Un-Supervised Classification --------------
+// ---------------------------------------------------------------------
+// Make the training dataset.
+var training_cl = Image1.sample({
+  region: table,
+  scale: 1000,
+  numPixels: 5000
+});
+print(training_cl, 'training_cl');
+
+// train cluster on Indices
+var clusterer = ee.Clusterer.wekaKMeans(2).train(training_cl);
+//print(clusterer);
+// cluster the complete Indices
+var clusters = Image1.cluster(clusterer);
+//print(clusters,'Cluster_Class' );
+//Display the clusters with random colors.
+//Map.addLayer(clusters.randomVisualizer(), {}, 'clusters_Class');
+
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+// ------------------------- Un-Supervised Classification --------------
+// ---------------------------------------------------------------------
+// ---------------------------------------------------------------------
+
+var Image1 = Image1.addBands(clusters)
+
+// selects the bands
+var label = 'class' 
+var bands = ['B2', 'B3', 'B4','B5','B6','B7','B8','B8A','B9','B11','B12','ndvi', 'ndbi', 'mndwi', 'bsi', 'EVI', 'kndvi', 'EVI2', 'EVI2_2', 'elevation', 'cluster']; // These are bands with 10 meter spatial resolution. 
+
+//print('BANDS',bands);
+var Image1 = Image1.select(bands)
+print(Image1,'IMAGE 5');
+
+var samples = forest.merge(non_forest).map(function(feat){ return feat.buffer(30)});
+print(samples, 'gcps');
+
+
+var classValue = [0, 1];
+
+// Split samples to train and test per class
+samples = ee.FeatureCollection(classValue.map(function(value){
+  var features = samples.filter(ee.Filter.eq('class', value)).randomColumn();
+  var train = features.filter(ee.Filter.lte('random', 0.8)).map(function(feat){ return feat.set('sample', 'train')});
+  var test = features.filter(ee.Filter.gt('random', 0.8)).map(function(feat){ return feat.set('sample', 'test')});
+  return train.merge(test);
+})).flatten();
+
+print(samples, 'samples')
+
+// Extract samples
+var extract = Image1.sampleRegions({
+  collection: samples,
+  scale: 50,
+  properties: ['sample', 'class']
+});
+
+print(extract, 'extract')
+
+var columns = ['B2', 'B3', 'B4','B5','B6','B7','B8','B8A','B9','B11','B12','ndvi', 'ndbi', 'mndwi', 'bsi', 'EVI', 'kndvi', 'EVI2', 'EVI2_2', 'elevation', 'cluster', 'class', 'sample'];
+
+// Export extract file to the Google Drive
+Export.table.toDrive({
+  collection: extract,
+  fileFormat: 'CSV',
+  selectors: columns,
+  description: 'Samples_JH_forest_non_2023',
+  folder: 'DL'
+});
+
+Export.table.toAsset({
+  collection: extract,
+  description:'Samples_JH_forest_non_2023',
+  //selectors: columns,
+  //fileFormat: 'CSV',
+  assetId: 'eecloudproject'
+});
