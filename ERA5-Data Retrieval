@@ -1,0 +1,72 @@
+var ERA5 = ee.ImageCollection("ECMWF/ERA5_LAND/HOURLY")
+.filterDate('2021-01-01','2021-12-31')
+.filterBounds(table2) 
+.map(function(image) {return image.clip(table2);})
+.select("surface_solar_radiation_downwards")
+//.map(function(image) {return image.divide(3600);})// Clipping the ImageCollection;
+
+//surface_thermal_radiation_downwards_hourly
+
+print(ERA5, "ERA_5");
+Map.centerObject(table2, 8)
+
+// Show the state polygon with a blue outline
+var outline = ee.Image().byte().paint({
+  featureCollection: table2,
+  color: 1,
+  width: 3
+});
+
+Map.addLayer(outline, {palette: ['blue']}, 'AOI'); // Adding the Layer to the GEE Environment
+Map.centerObject(table2, 8) // to get the Center and Zoom level of the desired image
+
+// ---------------------------------------------------------------------------------------------
+///// MODIS Monthly LAI Calculation I /////
+
+// Define first & last year of interest + search months
+var startyear = 2021; 
+var endyear = 2021;
+var startmonth = 1; 
+var endmonth = 12; 
+
+// Zeitrahmen berechnen und eine Sequenz erstellen mit MOnaten und Jahren -- keine Tage mehr
+// Compute beginning & end of study period + sequence of months & years
+var startdate = ee.Date.fromYMD(startyear, startmonth, 1);
+var enddate = ee.Date.fromYMD(endyear , endmonth, 30);
+var years = ee.List.sequence(startyear, endyear);
+var months = ee.List.sequence(startmonth,endmonth);
+
+// Create LAI composite for every month
+var monthlyLAI =  ee.ImageCollection.fromImages(
+  years.map(function (y) { 
+    return months.map(function(m) {
+      var monthly = ERA5
+        .filter(ee.Filter.calendarRange(y, y, "year"))
+        .filter(ee.Filter.calendarRange(m, m, "month"))
+        .mean(); 
+      return monthly
+        .set("year", y) 
+        .set("month", m) 
+        .set("system:time_start", ee.Date.fromYMD(y, m, 1));}); })
+  .flatten());
+print (monthlyLAI, 'monthly NDVI');
+
+var CO_Monthly = monthlyLAI.toBands(); ///// Stacking Process
+
+print(CO_Monthly, "Daily CO") /// Printing
+
+Export.image.toDrive({
+   image: CO_Monthly,
+   description: 'NE_Solar_Radiation_2021',
+   scale: 11132,
+   region: table2,
+   folder : 'Assam_Solar',
+    fileFormat: 'GeoTIFF',
+  formatOptions: {
+    cloudOptimized: true
+  },
+   maxPixels: 1e13,
+});
+
+
+
