@@ -16,6 +16,6 @@ India Atmosphere Monitoing GEE APP
 
 ## India Environmental Dashboard GEE App
 
-**Link:** [India Environmental Dashboard](https://trinath27071988.users.earthengine.app/view/india-environmental-dashboard)
+**Link:** [India Environmental Dashboard](https://trinathm108.projects.earthengine.app/view/india-environmental-dashboard)
 
 ![India Environmental Dashboard](https://trinathm108.projects.earthengine.app/view/india-environmental-dashboard)
