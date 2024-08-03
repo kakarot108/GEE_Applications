@@ -8,7 +8,7 @@ India Atmosphere Monitoing GEE APP
 
 ## Air Quality Monitoring of India
 
-**Link:** [Air Quality Monitoring of India](https://trinath27071988.users.earthengine.app/view/air-quality-monitoring-of-india)
+**Link:** [Air Quality Monitoring of India](https://trinathm108.projects.earthengine.app/view/earth-atmosphere-monitoring-of-india)
 
 ![Air Quality Monitoring of India](https://trinathm108.projects.earthengine.app/view/earth-atmosphere-monitoring-of-india)
 
