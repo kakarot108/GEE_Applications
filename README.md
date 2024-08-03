@@ -4,16 +4,18 @@ https://trinathm108.projects.earthengine.app/
 
 India Atmosphere Monitoing GEE APP
 
-Link --
-https://trinath27071988.users.earthengine.app/view/air-quality-monitoring-of-india
+# Environmental Monitoring Dashboards
 
-![image](https://trinathm108.projects.earthengine.app/view/earth-atmosphere-monitoring-of-india)
+## Air Quality Monitoring of India
 
-India Environmental Dashboard GEE APP
+**Link:** [Air Quality Monitoring of India](https://trinath27071988.users.earthengine.app/view/air-quality-monitoring-of-india)
 
-Link --
-https://trinath27071988.users.earthengine.app/view/india-environmental-dashboard
+![Air Quality Monitoring of India](https://trinathm108.projects.earthengine.app/view/earth-atmosphere-monitoring-of-india)
 
-![image](https://trinathm108.projects.earthengine.app/view/india-environmental-dashboard)
+---
 
+## India Environmental Dashboard GEE App
 
+**Link:** [India Environmental Dashboard](https://trinath27071988.users.earthengine.app/view/india-environmental-dashboard)
+
+![India Environmental Dashboard](https://trinathm108.projects.earthengine.app/view/india-environmental-dashboard)
