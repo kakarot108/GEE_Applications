@@ -1,6 +1,6 @@
 # GEE Applications
 
-https://trinath27071988.users.earthengine.app/
+https://trinathm108.projects.earthengine.app/
 
 India Atmosphere Monitoing GEE APP
 
