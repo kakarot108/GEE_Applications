@@ -16,13 +16,12 @@ India Atmosphere Monitoing GEE APP
 ## India Environmental Dashboard GEE App
 
 **Link:** [India Environmental Dashboard](https://trinathm108.projects.earthengine.app/view/india-environmental-dashboard)
-
-![India Environmental Dashboard](https://trinathm108.projects.earthengine.app/view/india-environmental-dashboard)
+![image](https://github.com/user-attachments/assets/9361f2e0-650a-4983-a27e-8127d9c9d3c3)
 
 ---
 
 ## JRC Global Surface Water Analysis
 
 **Link:** [India Environmental Dashboard](https://trinathm108.projects.earthengine.app/view/globalsurfacewater)
+![image](https://github.com/user-attachments/assets/b5e25f55-7812-4e32-a899-b1a1c9363f4e)
 
-![India Environmental Dashboard](https://trinathm108.projects.earthengine.app/view/globalsurfacewater)
